@@ -22,3 +22,14 @@ class OrderData:
     order_gray = {**order_base, "color": ["GREY"]}
     order_both = {**order_base, "color": ["BLACK", "GREY"]}
     order_no_color = {**order_base}
+
+class CourierData:
+
+    nonexistent = {
+        "login": "nonexistent_user",
+        "password": "nopass"
+    }
+
+class WrongCourierData:
+    wrong_login = {"login": "wrong", "password": None}
+    wrong_password = {"login": None, "password": "wrong"}

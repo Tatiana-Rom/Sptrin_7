@@ -1,7 +1,7 @@
-import requests
-import allure
 import pytest
-from data.urls import Urls
+import allure
+from client.order_client import OrderClient
+
 
 class TestOrdersListGet:
 
@@ -9,8 +9,9 @@ class TestOrdersListGet:
     @allure.description("Проверка, что список заказов успешно возвращается и имеет корректную структуру.")
     def test_orders_list_get_success(self):
         with allure.step("Отправляем запрос на получение списка заказов"):
-            response = requests.get(Urls.URL_orders_create)
+            response = OrderClient.get_list()
 
         assert response.status_code == 200
-        assert "orders" in response.json()
-        assert isinstance(response.json()["orders"], list)
+        response_json = response.json()
+        assert "orders" in response_json
+        assert isinstance(response_json["orders"], list), "Список заказов должен быть массивом"

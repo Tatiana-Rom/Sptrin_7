@@ -3,6 +3,7 @@ import pytest
 import allure
 from data.urls import Urls
 from data.data import OrderData
+from data.messages import OrderMessages
 
 
 class TestCreateOrder:
@@ -19,8 +20,8 @@ class TestCreateOrder:
         OrderData.order_no_color
     ])
     def test_create_order(self, order_data):
-
         with allure.step(f"Cоздание заказа: {order_data['firstName']}"):
             response = requests.post(Urls.URL_orders_create, json=order_data)
 
-        assert response.status_code == 201 and "track" in response.json()
+        assert response.status_code == 201
+        assert OrderMessages.SUCCESS_KEY in response.json()

@@ -1,7 +1,7 @@
-import requests
 import allure
 import pytest
-from data.urls import Urls
+from client.courier_client import CourierClient
+from data.messages import CourierMessages
 
 
 class TestCreateCourier:
@@ -12,27 +12,33 @@ class TestCreateCourier:
         creation_body, _ = generate_courier_data
 
         with allure.step("Создаём курьера"):
-            response = requests.post(Urls.URL_courier_create, json=creation_body)
-            assert response.status_code == 201, f"Неверный код: {response.text}"
-            assert response.json().get("ok") is True
+            response = CourierClient.create(creation_body)
 
+        assert response.status_code == 201, f"Неверный код: {response.text}"
+        assert response.json().get("ok") is True
 
     @allure.title("Ошибка при создании двух одинаковых курьеров")
-    @allure.description("Проверяем, что нельзя создать двух одинаковых курьеров — ответ 409 и сообщение об ошибке")
-    def test_create_duplicate_courier(self, created_courier):
-        with allure.step("Отправляем повторный запрос на создание курьера"):
-            response = requests.post(Urls.URL_courier_create, json=created_courier)
+    @allure.description("Нельзя создать двух одинаковых курьеров — ответ 409 и сообщение об ошибке")
+    def test_create_duplicate_courier(self, generate_courier_data):
+        creation_body, _ = generate_courier_data
+        CourierClient.create(creation_body)
 
-        assert response.status_code == 409 and response.json().get("message") == "Этот логин уже используется"
+        with allure.step("Пробуем создать того же курьера ещё раз"):
+            response = CourierClient.create(creation_body)
+
+        assert response.status_code == 409
+        assert response.json().get("message") == CourierMessages.COURIER_ALREADY_EXISTS
 
     @allure.title("Ошибка при создании курьера без обязательного поля")
-    @allure.description("Проверяем, что если убрать login или password — ответ 400 и сообщение об ошибке")
+    @allure.description("Если убрать login или password — ответ 400 и сообщение об ошибке")
     @pytest.mark.parametrize("missing_field", ["login", "password"])
-    def test_create_courier_missing_required_field(self, courier_data, missing_field):
-        data = courier_data.copy()
+    def test_create_courier_missing_required_field(self, generate_courier_data, missing_field):
+        creation_body, _ = generate_courier_data
+        data = creation_body.copy()
         data.pop(missing_field)
 
         with allure.step(f"Cоздание курьера без поля {missing_field}"):
-            response = requests.post(Urls.URL_courier_create, json=data)
+            response = CourierClient.create(data)
 
-        assert response.status_code == 400 and response.json().get("message") == "Недостаточно данных для создания учетной записи"
+        assert response.status_code == 400
+        assert response.json().get("message") == CourierMessages.NOT_ENOUGH_DATA
